@@ -167,31 +167,6 @@ def average_gradients(tower_grads):
         average_grads.append(grad_and_var)
     return average_grads
 
-def plot_network_output(name):
-    iter_ = data_iterator()
-    example_data,indx = iter_.next()
-    random_x, recon_z, all_d = sess.run((x_p, z_x_mean, d_x_p),{all_input224: example_data,
-                                                            beta_nima:[-2],
-                                                            train_model: False})
-    top_d = np.argsort(np.squeeze(all_d))
-    recon_x = sess.run((x_tilde), {z_x: recon_z})
-    examples = 8
-    random_x = np.squeeze(random_x)
-    recon_x = np.squeeze(recon_x)
-    random_x = random_x[top_d]
-    example_data = img64[indx]
-    fig, ax = plt.subplots(nrows=3, ncols=examples, figsize=(18, 6))
-    for i in xrange(examples):
-        ax[(0, i)].imshow(random_x[i], cmap=plt.cm.gray, interpolation='nearest')
-        ax[(1, i)].imshow(recon_x[i], cmap=plt.cm.gray, interpolation='nearest')
-        ax[(2, i)].imshow(example_data[i], cmap=plt.cm.gray,
-                          interpolation='nearest')
-        ax[(0, i)].axis('off')
-        ax[(1, i)].axis('off')
-        ax[(2, i)].axis('off')
-    fig.suptitle('Top: random points in z space | Bottom: inputs | Middle: reconstructions')
-    fig.savefig(''.join([ save_dir_fig,'/',name, '.pdf']))
-
 batch_size = 25
 graph = tf.Graph()
 import sys
@@ -237,7 +212,7 @@ with graph.as_default():
             G_params = [i for i in params if 'gen' in i.name]
             D_params = [i for i in params if 'dis' in i.name]
 
-            grads_e = opt_E.compute_gradients(KL_loss+LL_loss+P_param*pair_loss, var_list=E_params)
+            grads_e = opt_E.compute_gradients(KL_loss+LL_loss+P_param*pair_loss, var_list=E_params)#with KL_loss,you can discard it.
             grads_g = opt_G.compute_gradients(LL_loss+G_loss, var_list=G_params)
             grads_d = opt_D.compute_gradients(D_loss, var_list=D_params)
 
@@ -288,7 +263,7 @@ epoch = 0
 d_real = 0
 d_fake = 0
 cur_epoch = 0
-num_epochs =  61
+num_epochs =  101
 e_learning_rate = 1e-3
 g_learning_rate = 1e-3
 d_learning_rate = 1e-3
@@ -316,10 +291,10 @@ while epoch < num_epochs:
                 lr_D: e_current_lr,
                 all_input224: next_batches224,
                 all_input64: next_batches64,
-                G_param: 1,
-                LL_param: 1,
+                G_param: 0.1,
+                LL_param: 0.1,
                 beta_nima:[betas[globa_beta_indx]],
-                P_param: 10,
+                P_param: 1.0,
                 s_s: ss_,
                 train_model: True
 
