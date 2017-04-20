@@ -111,7 +111,7 @@ def inference(x224,x64):
         with tf.variable_scope("enc"):
                 vgg_net = Vgg19('./vgg19.npy', codelen=hidden_size)
                 vgg_net.build(x224, beta_nima, train_model)
-                z_x_mean = vgg_net.fc8
+                z_x_mean = vgg_net.fc9
                 z_x_log_sigma_sq = vgg_net.fc10
 
         with tf.variable_scope("gen"):
