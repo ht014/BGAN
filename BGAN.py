@@ -21,9 +21,6 @@ import math
 import ipywidgets as widgets
 from ipywidgets import interact, interactive, fixed
 
-save_dir_fig ='reconsts'
-if False==os.path.exists(save_dir_fig):
-    os.mkdir(save_dir_fig)
 
 def saveB(name_B):
     a = sio.loadmat('cifar-10.mat')
@@ -58,8 +55,8 @@ def saveB(name_B):
             B_ = feature[0]
         else:
             B_ = np.concatenate((B_, feature[0]), axis=0)
-    print B.shape,B_.shape
     np.savez(name_B+'.npz', dataset=B, test=B_)
+    print 'save done!'
 
 
 def data_iterator():
@@ -166,7 +163,7 @@ def average_gradients(tower_grads):
         average_grads.append(grad_and_var)
     return average_grads
 
-batch_size = 25
+batch_size = 40
 graph = tf.Graph()
 import sys
 hidden_size = int(sys.argv[1])
@@ -292,7 +289,7 @@ while epoch < num_epochs:
                 all_input64: next_batches64,
                 G_param: 0.1,
                 LL_param: 0.1,
-                beta_nima:[betas[globa_beta_indx]],
+                beta_nima:[betas[globa_beta_indx]], 
                 P_param: 1.0,
                 s_s: ss_,
                 train_model: True
@@ -302,8 +299,9 @@ while epoch < num_epochs:
 
         print "epoch:{0},all_loss:{1},SSE_loss:{2}".\
             format(cur_epoch/total_batch,PP_err+KL_err+LL_err+D_err+G_err,SSE_err)
-
+    
     #IPython.display.clear_output()
     #plot_network_output(str(epoch).zfill(5))
     epoch += 1
- saver.save(sess, ''.join(['models/cifar_pair_KL_',str(hidden_size),'_', str(epoch).zfill(4), '.tfmod']))
+    if epoch % 20 ==0 :
+        saver.save(sess, ''.join(['models/cifar_pair_',str(hidden_size),'_', str(epoch).zfill(4), '.tfmod']))
