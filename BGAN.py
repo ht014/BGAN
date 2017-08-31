@@ -1,6 +1,5 @@
 import matplotlib
 matplotlib.use('pdf')
-from queue_context import queue_context
 import tensorflow as tf
 import numpy as np
 from generator import Vgg19
