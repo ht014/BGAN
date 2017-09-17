@@ -299,7 +299,10 @@ while epoch < num_epochs:
 
         print "epoch:{0},all_loss:{1},SSE_loss:{2}".\
             format(cur_epoch/total_batch,PP_err+KL_err+LL_err+D_err+G_err,SSE_err)
-    
+    if epoch % 7 == 0 and epoch > 0:
+        globa_beta_indx += 1
+        if globa_beta_indx >= len(betas):
+            globa_beta_indx = len(betas) -1;
     #IPython.display.clear_output()
     #plot_network_output(str(epoch).zfill(5))
     epoch += 1
