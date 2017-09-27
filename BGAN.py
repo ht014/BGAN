@@ -208,8 +208,8 @@ with graph.as_default():
             G_params = [i for i in params if 'gen' in i.name]
             D_params = [i for i in params if 'dis' in i.name]
 
-            grads_e = opt_E.compute_gradients(KL_loss+LL_loss+P_param*pair_loss, var_list=E_params)#with KL_loss,you can discard it.
-            grads_g = opt_G.compute_gradients(LL_loss+G_loss, var_list=G_params)
+            grads_e = opt_E.compute_gradients(KL_loss+LL_loss*LL_param+P_param*pair_loss, var_list=E_params)#with KL_loss,you can discard it.
+            grads_g = opt_G.compute_gradients(LL_loss+G_loss*G_param, var_list=G_params)
             grads_d = opt_D.compute_gradients(D_loss, var_list=D_params)
 
             tower_grads_e.append(grads_e)
