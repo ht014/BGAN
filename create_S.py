@@ -3,6 +3,7 @@ import scipy.io as sio
 import os
 
 data = np.load('cifar_KNN.npz')['topK']# cifar_KNN.npz is the first KNN rank ,the top K nearest neighbor of  each image
+size = data.shape[0]
 K1 = 20
 K2 = 30
 S = np.ones((size,size))*-1 
@@ -24,5 +25,5 @@ for i in xrange(size):
     for  j in sp:
          S[i][j] = 1.
          S[j][i] = 1.
-sio.savemat('S_K1_'+str(K)+'_K2_'+str(K2)+'.mat',{'S':S})
+sio.savemat('S_K1_'+str(K1)+'_K2_'+str(K2)+'.mat',{'S':S})
 
