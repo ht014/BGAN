@@ -263,7 +263,7 @@ d_learning_rate = 1e-3
 globa_beta_indx = 0
 while epoch < num_epochs:
     iter_ = data_iterator()
-    for i in  range(total_batch):
+    for i in tqdm.tqdm(range(total_batch)):
         cur_epoch += 1.0
         e_current_lr = e_learning_rate*1.0#/betas[globa_beta_indx] #* sigmoid(np.mean(d_real), -.5, 15)
         g_current_lr = g_learning_rate #* sigmoid(np.mean(d_real), -.5, 15)
@@ -294,7 +294,7 @@ while epoch < num_epochs:
             }
             )
 
-        print "epoch:{0},all_loss:{1}".format(cur_epoch/total_batch,PP_err+KL_err+LL_err+D_err+G_err)
+        #print "epoch:{0},all_loss:{1}".format(cur_epoch/total_batch,PP_err+KL_err+LL_err+D_err+G_err)
     if epoch % 8 == 0 and epoch > 0:
         globa_beta_indx += 1
         if globa_beta_indx >= len(betas):
