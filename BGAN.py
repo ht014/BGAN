@@ -284,10 +284,10 @@ while epoch < num_epochs:
                 lr_D: e_current_lr,
                 all_input224: next_batches224,
                 all_input64: next_batches64,
-                G_param: 1,
-                LL_param: 1,
+                G_param: 0.1,
+                LL_param: 0.1,
                 beta_nima:[betas[globa_beta_indx]], 
-                P_param: 10.,
+                P_param: 1.,
                 s_s: ss_,
                 train_model: True
 
