@@ -3,13 +3,11 @@ matplotlib.use('pdf')
 import tensorflow as tf
 import numpy as np
 from generator import Vgg19
-from discriminator import discriminator
 import os
 import utils
 import scipy
 import scipy.io as sio
 from deconv import deconv2d
-from optimizer import optim
 import tqdm
 import scipy
 import scipy.io as sio
@@ -38,6 +36,7 @@ def saveB(name_B):
         image = scipy.misc.imresize(t, [224, 224])
         test_images.append(image)
     test_images = np.array(test_images)
+    print 'generate binary codes ....'
     for i in xrange(0, len(images_), batch_size):
         all = images_[i:i + batch_size]
         feature = sess.run([z_x_mean], \
@@ -143,15 +142,13 @@ def loss(x64, x_tilde, z_x_log_sigma_sq1, z_x_meanx1, d_x, d_x_p, l_x, l_x_tilde
     D_loss = tf.reduce_mean(-1. * (tf.log(tf.clip_by_value(d_x, 1e-5, 1.0)) +
                                    tf.log(tf.clip_by_value(1.0 - d_x_p, 1e-5, 1.0))))
     G_loss = tf.reduce_mean(-1. * (tf.log(tf.clip_by_value(d_x_p, 1e-5, 1.0))))
-    LL_loss = tf.reduce_sum(tf.square(l_x - l_x_tilde)) / 64/64/3
+    LL_loss = tf.reduce_sum(tf.square(l_x - l_x_tilde)) / 64/64./3.
     return SSE_loss, KL_loss, D_loss, G_loss, LL_loss,pair_loss
 
 
 def average_gradients(tower_grads):
     average_grads = []
     for grad_and_vars in zip(*tower_grads):
-        # Note that each grad_and_vars looks like the following:
-        #   ((grad0_gpu0, var0_gpu0), ... , (grad0_gpuN, var0_gpuN))
         grads = []
         for g, _ in grad_and_vars:
             expanded_g = tf.expand_dims(g, 0)
@@ -208,8 +205,8 @@ with graph.as_default():
             G_params = [i for i in params if 'gen' in i.name]
             D_params = [i for i in params if 'dis' in i.name]
 
-            grads_e = opt_E.compute_gradients(KL_loss+LL_loss*LL_param+P_param*pair_loss, var_list=E_params)#with KL_loss,you can discard it.
-            grads_g = opt_G.compute_gradients(LL_loss+G_loss*G_param, var_list=G_params)
+            grads_e = opt_E.compute_gradients(SSE_loss+LL_loss*LL_param+P_param*pair_loss, var_list=E_params)
+            grads_g = opt_G.compute_gradients(LL_loss*LL_param+G_loss*G_param, var_list=G_params)
             grads_d = opt_D.compute_gradients(D_loss, var_list=D_params)
 
             tower_grads_e.append(grads_e)
@@ -232,7 +229,7 @@ with graph.as_default():
 with graph.as_default():
     saver = tf.train.Saver()  # initialize network saver
     sess = tf.InteractiveSession(graph=graph,config=tf.ConfigProto(allow_soft_placement=True,log_device_placement=True))
-    sess = tf.InteractiveSession(graph=graph,config=config)
+    #sess = tf.InteractiveSession(graph=graph,config=config)
     sess.run(tf.global_variables_initializer())
 
 
@@ -240,7 +237,7 @@ def sigmoid(x, shift, mult):
     return 1 / (1 + math.exp(-(x + shift) * mult))
 
 betas=[-2,-5,-10,-15,-20]
-S = sio.loadmat('../S_K1_20_K2_30.mat')['S']  # similarity matrix
+S = sio.loadmat('./S_K1_20_K2_30.mat')['S']  # similarity matrix
 dataset1 = sio.loadmat('cifar-10.mat')['train_data']  #cifar-10 data
 img224 = []
 img64 = []
@@ -259,7 +256,7 @@ epoch = 0
 d_real = 0
 d_fake = 0
 cur_epoch = 0
-num_epochs =  101
+num_epochs =  51
 e_learning_rate = 1e-3
 g_learning_rate = 1e-3
 d_learning_rate = 1e-3
@@ -274,10 +271,10 @@ while epoch < num_epochs:
         next_batches224 ,indx3= iter_.next()
         next_batches64 = img64[indx3]
         ss_ = S[indx3,:][:,indx3]
-        z_mn, _, _, _, D_err, KL_err,G_err, SSE_err, LL_err, PP_err, d_fake, d_real = sess.run(
+        z_mn, _, _, _, D_err, KL_err,G_err, LL_err, PP_err, d_fake, d_real = sess.run(
             [z_x_mean,
              train_E, train_G, train_D,
-             D_loss,KL_loss, G_loss,SSE_loss,
+             D_loss,KL_loss, G_loss,
              LL_loss, pair_loss,
              d_x_p, d_x,
              ],
@@ -287,24 +284,22 @@ while epoch < num_epochs:
                 lr_D: e_current_lr,
                 all_input224: next_batches224,
                 all_input64: next_batches64,
-                G_param: 0.1,
-                LL_param: 0.1,
+                G_param: 1,
+                LL_param: 1,
                 beta_nima:[betas[globa_beta_indx]], 
-                P_param: 1.0,
+                P_param: 10.,
                 s_s: ss_,
                 train_model: True
 
             }
             )
 
-        print "epoch:{0},all_loss:{1},SSE_loss:{2}".\
-            format(cur_epoch/total_batch,PP_err+KL_err+LL_err+D_err+G_err,SSE_err)
-    if epoch % 7 == 0 and epoch > 0:
+        print "epoch:{0},all_loss:{1}".format(cur_epoch/total_batch,PP_err+KL_err+LL_err+D_err+G_err)
+    if epoch % 8 == 0 and epoch > 0:
         globa_beta_indx += 1
         if globa_beta_indx >= len(betas):
             globa_beta_indx = len(betas) -1;
-    #IPython.display.clear_output()
-    #plot_network_output(str(epoch).zfill(5))
     epoch += 1
-    if epoch % 20 ==0 :
-        saver.save(sess, ''.join(['models/cifar_pair_',str(hidden_size),'_', str(epoch).zfill(4), '.tfmod']))
+   
+       
+saveB('codes/'+str(hidden_size)+'_'+str(epoch).zfill(5)+'_beta')
