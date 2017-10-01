@@ -295,10 +295,7 @@ while epoch < num_epochs:
             )
 
         #print "epoch:{0},all_loss:{1}".format(cur_epoch/total_batch,PP_err+KL_err+LL_err+D_err+G_err)
-    if epoch % 8 == 0 and epoch > 0:
-        globa_beta_indx += 1
-        if globa_beta_indx >= len(betas):
-            globa_beta_indx = len(betas) -1;
+     
     epoch += 1
    
        
